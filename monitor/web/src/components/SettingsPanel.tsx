@@ -6,6 +6,7 @@ import { Checkbox } from './ui/checkbox'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
+import { splitNonEmptyLines } from '../utils/text'
 
 function Section({ title, description, children, onSave }: { title: string; description: string; children: ReactNode; onSave: () => void }) {
   return (
@@ -123,7 +124,7 @@ export function SettingsPanel({ settings, defaults, onSave }: { settings: Monito
                 ...draft,
                 qualityChecks: {
                   ...draft.qualityChecks,
-                  commands: event.target.value.split('\n').map((line) => line.trim()).filter(Boolean),
+                  commands: splitNonEmptyLines(event.target.value),
                 },
               })}
             />

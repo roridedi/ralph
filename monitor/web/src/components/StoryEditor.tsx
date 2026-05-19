@@ -6,6 +6,7 @@ import { Checkbox } from './ui/checkbox'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
+import { splitNonEmptyLines } from '../utils/text'
 
 export function StoryEditor({
   story,
@@ -56,7 +57,7 @@ export function StoryEditor({
               onChange={(event) =>
                 setDraft({
                   ...draft,
-                  acceptanceCriteria: event.target.value.split('\n').map((line) => line.trim()).filter(Boolean),
+                  acceptanceCriteria: splitNonEmptyLines(event.target.value),
                 })
               }
             />

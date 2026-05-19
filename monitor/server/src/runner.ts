@@ -52,6 +52,27 @@ const createIdleStatus = (): RunStatus => RunStatusSchema.parse({
 
 const now = () => new Date().toISOString()
 
+const resolveIterationState = (
+  hasNewCommit: boolean,
+  completeSignalDetected: boolean,
+  pauseOnFailure: boolean,
+  defaultState: RunIteration['state'],
+): RunIteration['state'] => {
+  if (hasNewCommit) {
+    return completeSignalDetected ? 'complete' : 'success'
+  }
+
+  if (defaultState === 'complete') {
+    return 'complete'
+  }
+
+  if (pauseOnFailure) {
+    return 'stalled'
+  }
+
+  return defaultState
+}
+
 export class RalphRunner {
   private child: ReturnType<typeof spawn> | null = null
   private status: RunStatus = createIdleStatus()
@@ -243,13 +264,12 @@ export class RalphRunner {
 
     const repoRoot = this.callbacks.getSettings().paths.repoRoot
     const headSha = await getHeadSha(repoRoot)
-    const iterationState = headSha && headSha !== this.activeIteration.startSha
-      ? (this.status.completeSignalDetected ? 'complete' : 'success')
-      : defaultState === 'complete'
-        ? 'complete'
-        : this.callbacks.getSettings().run.pauseOnFailure
-          ? 'stalled'
-          : defaultState
+    const iterationState = resolveIterationState(
+      Boolean(headSha && headSha !== this.activeIteration.startSha),
+      this.status.completeSignalDetected,
+      this.callbacks.getSettings().run.pauseOnFailure,
+      defaultState,
+    )
 
     const updatedIteration: RunIteration = {
       iteration: this.activeIteration.iteration,
