@@ -4,14 +4,18 @@ import type { FastifyInstance } from 'fastify'
 import { listArchiveDirectories } from '../git.js'
 import { parseProgress } from '../progress.js'
 import { PrdSchema, ParsedProgressSchema, type ArchiveSummary, type MonitorSettings } from '../../../shared/schema.js'
-import { createRateLimitHook } from './rate-limit.js'
+import { isRateLimited } from './rate-limit.js'
 
 const readArchiveSummary = async (settings: MonitorSettings, name: string): Promise<ArchiveSummary> => {
-  if (name.includes('..') || name.includes('/') || name.includes('\\')) {
+  if (!/^\d{4}-\d{2}-\d{2}-[A-Za-z0-9._-]+$/.test(name)) {
     throw new Error('Invalid archive name')
   }
 
   const archiveRoot = resolve(settings.paths.repoRoot, 'archive')
+  const validArchives = await listArchiveDirectories(settings)
+  if (!validArchives.includes(name)) {
+    throw new Error('Unknown archive')
+  }
   const archivePath = resolve(archiveRoot, name)
   if (!archivePath.startsWith(`${archiveRoot}/`) && archivePath !== archiveRoot) {
     throw new Error('Invalid archive path')
@@ -49,13 +53,23 @@ const readArchiveSummary = async (settings: MonitorSettings, name: string): Prom
 }
 
 export const registerArchiveRoutes = (app: FastifyInstance, context: { getSettings: () => MonitorSettings }) => {
-  app.get('/api/archive', { onRequest: createRateLimitHook(30, 10_000) }, async () => {
+  app.get('/api/archive', async (request, reply) => {
+    if (isRateLimited(request, 'archive-list', 30, 10_000)) {
+      reply.code(429)
+      return { message: 'Too many requests' }
+    }
+
     const names = await listArchiveDirectories(context.getSettings())
     return Promise.all(names.map((name) => readArchiveSummary(context.getSettings(), name)))
   })
 
-  app.get('/api/archive/:name', { onRequest: createRateLimitHook(30, 10_000) }, async (request, reply) => {
+  app.get('/api/archive/:name', async (request, reply) => {
     try {
+      if (isRateLimited(request, 'archive-detail', 30, 10_000)) {
+        reply.code(429)
+        return { message: 'Too many requests' }
+      }
+
       const name = (request.params as { name: string }).name
       return await readArchiveSummary(context.getSettings(), name)
     } catch (error) {
