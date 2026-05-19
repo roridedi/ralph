@@ -13,6 +13,9 @@ cd flowchart && npm run dev
 # Build the flowchart
 cd flowchart && npm run build
 
+# Build the monitor workspace
+cd monitor && npm run build
+
 # Run Ralph with Amp (default)
 ./ralph.sh [max_iterations]
 
@@ -27,6 +30,7 @@ cd flowchart && npm run build
 -  `CLAUDE.md` - Instructions given to each Claude Code instance
 - `prd.json.example` - Example PRD format
 - `flowchart/` - Interactive React Flow diagram explaining how Ralph works
+- `monitor/` - Local-only monitor daemon and React UI for Ralph
 
 ## Flowchart
 
@@ -45,3 +49,4 @@ npm run dev
 - Memory persists via git history, `progress.txt`, and `prd.json`
 - Stories should be small enough to complete in one context window
 - Always update AGENTS.md with discovered patterns for future iterations
+- Validate monitor changes with `cd monitor && npm run build`; it typechecks the Fastify daemon and builds the Vite UI together

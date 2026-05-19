@@ -2,6 +2,7 @@
 prd.json
 progress.txt
 .last-branch
+monitor.config.json
 
 # Archive is optional to commit
 # archive/
@@ -11,3 +12,7 @@ progress.txt
 
 #Claude
 .claude/
+
+# Monitor workspace
+monitor/node_modules
+monitor/**/dist

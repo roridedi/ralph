@@ -119,6 +119,18 @@ This creates `prd.json` with user stories structured for autonomous execution.
 
 Default is 10 iterations. Use `--tool amp` or `--tool claude` to select your AI coding tool.
 
+### Optional: Run the local monitor UI
+
+If you want a browser UI for Ralph status, PRD editing, settings, and live logs:
+
+```bash
+cd monitor
+npm install
+npm run dev
+```
+
+Then open `http://localhost:7777`.
+
 Ralph will:
 1. Create a feature branch (from PRD `branchName`)
 2. Pick the highest priority story where `passes: false`
@@ -143,6 +155,7 @@ Ralph will:
 | `skills/ralph/` | Skill for converting PRDs to JSON (works with Amp and Claude Code) |
 | `.claude-plugin/` | Plugin manifest for Claude Code marketplace discovery |
 | `flowchart/` | Interactive visualization of how Ralph works |
+| `monitor/` | Local-only monitor daemon and web UI for Ralph |
 
 ## Flowchart
 
