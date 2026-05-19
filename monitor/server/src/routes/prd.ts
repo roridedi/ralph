@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { readPrd, writePrd } from '../prd.js'
 import type { MonitorSettings, WebSocketEvent } from '../../../shared/schema.js'
+import { createRateLimitHook } from './rate-limit.js'
 
 type PrdRouteContext = {
   getSettings: () => MonitorSettings
@@ -8,7 +9,7 @@ type PrdRouteContext = {
 }
 
 export const registerPrdRoutes = (app: FastifyInstance, context: PrdRouteContext) => {
-  app.get('/api/prd', async () => readPrd(context.getSettings()))
+  app.get('/api/prd', { onRequest: createRateLimitHook(60, 10_000) }, async () => readPrd(context.getSettings()))
 
   app.put('/api/prd', async (request, reply) => {
     try {

@@ -1,7 +1,7 @@
 import Fastify from 'fastify'
 import fastifyStatic from '@fastify/static'
 import { resolve } from 'node:path'
-import { WebSocketServer, type WebSocket } from 'ws'
+import { WebSocket, WebSocketServer } from 'ws'
 import { readPrd } from './prd.js'
 import { readProgress } from './progress.js'
 import { RalphRunner } from './runner.js'
@@ -29,7 +29,7 @@ let closeWatchers = async () => {}
 const emit = (event: WebSocketEvent) => {
   const payload = JSON.stringify(event)
   for (const client of clients) {
-    if (client.readyState === client.OPEN) {
+    if (client.readyState === WebSocket.OPEN) {
       client.send(payload)
     }
   }

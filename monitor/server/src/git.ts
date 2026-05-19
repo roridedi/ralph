@@ -91,7 +91,7 @@ export const runPostCompleteGitActions = async (
       const merged = await git(repoRoot, ['branch', '--merged', gitSettings.targetBranch])
       const mergedBranches = merged
         .split('\n')
-        .map((line) => line.replace('*', '').trim())
+        .map((line) => line.replace(/^\*/, '').trim())
         .filter(Boolean)
       if (mergedBranches.includes(branchName)) {
         await execFileAsync('git', ['-C', repoRoot, 'branch', '-d', branchName], { encoding: 'utf8' })

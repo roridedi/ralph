@@ -4,13 +4,18 @@ import type { FastifyInstance } from 'fastify'
 import { listArchiveDirectories } from '../git.js'
 import { parseProgress } from '../progress.js'
 import { PrdSchema, ParsedProgressSchema, type ArchiveSummary, type MonitorSettings } from '../../../shared/schema.js'
+import { createRateLimitHook } from './rate-limit.js'
 
 const readArchiveSummary = async (settings: MonitorSettings, name: string): Promise<ArchiveSummary> => {
-  if (name.includes('..') || name.includes('/')) {
+  if (name.includes('..') || name.includes('/') || name.includes('\\')) {
     throw new Error('Invalid archive name')
   }
 
-  const archivePath = resolve(settings.paths.repoRoot, 'archive', name)
+  const archiveRoot = resolve(settings.paths.repoRoot, 'archive')
+  const archivePath = resolve(archiveRoot, name)
+  if (!archivePath.startsWith(`${archiveRoot}/`) && archivePath !== archiveRoot) {
+    throw new Error('Invalid archive path')
+  }
   let prd = null
   let progress = ParsedProgressSchema.parse({ exists: false, raw: '', codebasePatterns: [], entries: [] })
 
@@ -44,12 +49,12 @@ const readArchiveSummary = async (settings: MonitorSettings, name: string): Prom
 }
 
 export const registerArchiveRoutes = (app: FastifyInstance, context: { getSettings: () => MonitorSettings }) => {
-  app.get('/api/archive', async () => {
+  app.get('/api/archive', { onRequest: createRateLimitHook(30, 10_000) }, async () => {
     const names = await listArchiveDirectories(context.getSettings())
     return Promise.all(names.map((name) => readArchiveSummary(context.getSettings(), name)))
   })
 
-  app.get('/api/archive/:name', async (request, reply) => {
+  app.get('/api/archive/:name', { onRequest: createRateLimitHook(30, 10_000) }, async (request, reply) => {
     try {
       const name = (request.params as { name: string }).name
       return await readArchiveSummary(context.getSettings(), name)

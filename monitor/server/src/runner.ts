@@ -15,6 +15,7 @@ import {
 
 const execAsync = promisify(execCallback)
 const ITERATION_REGEX = /Ralph Iteration\s+(\d+)\s+of\s+(\d+)\s+\((amp|claude)\)/i
+// Ralph exits cleanly only after the prompt template writes this exact sentinel to stdout.
 const COMPLETE_SIGNAL = '<promise>COMPLETE</promise>'
 const MAX_LOG_LINES = 1000
 
